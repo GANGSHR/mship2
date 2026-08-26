@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>苷舍 宅配進度查詢</title>
+<style>
+  :root{
+    --cream:#faf3ea;
+    --card:#ffffff;
+    --latte:#d8c3a5;
+    --latte-dark:#b89b76;
+    --text-main:#4a3b2c;
+    --text-sub:#8a7862;
+    --accent:#a97c50;
+    --warn-red:#c0392b;
+    --success:#6b8f71;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    background:linear-gradient(180deg,var(--cream) 0%, #f3e7d8 100%);
+    color:var(--text-main);
+    display:flex;
+    justify-content:center;
+    padding:32px 16px;
+  }
+  .wrap{width:100%;max-width:480px;}
+  .brand{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  .brand .logo-text{
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:2px;
+    color:var(--accent);
+  }
+  .brand .sub{
+    font-size:13px;
+    color:var(--text-sub);
+    margin-top:4px;
+  }
+  .card{
+    background:var(--card);
+    border-radius:20px;
+    padding:28px 22px;
+    box-shadow:0 8px 24px rgba(184,155,118,0.18);
+    border:1px solid #f0e2cf;
+  }
+  h1{
+    font-size:18px;
+    margin:0 0 6px;
+    color:var(--text-main);
+  }
+  p.desc{
+    font-size:13.5px;
+    color:var(--text-sub);
+    line-height:1.6;
+    margin:0 0 20px;
+  }
+  label{
+    display:block;
+    font-size:13px;
+    color:var(--text-sub);
+    margin-bottom:8px;
+  }
+  .input-row{
+    display:flex;
+    gap:8px;
+  }
+  input[type="text"]{
+    flex:1;
+    padding:14px 14px;
+    font-size:15px;
+    border:1.5px solid var(--latte);
+    border-radius:12px;
+    background:#fffdfa;
+    color:var(--text-main);
+    outline:none;
+    transition:border-color .15s;
+  }
+  input[type="text"]:focus{
+    border-color:var(--accent);
+  }
+  button{
+    padding:0 22px;
+    font-size:15px;
+    font-weight:600;
+    border:none;
+    border-radius:12px;
+    background:var(--accent);
+    color:#fff;
+    cursor:pointer;
+    transition:background .15s;
+    white-space:nowrap;
+  }
+  button:hover{background:var(--latte-dark);}
+  button:active{transform:scale(0.98);}
+
+  .hint{
+    font-size:12px;
+    color:var(--text-sub);
+    margin-top:10px;
+  }
+
+  #results{margin-top:22px;display:flex;flex-direction:column;gap:14px;}
+
+  .result-card{
+    border:1px solid #f0e2cf;
+    background:#fffaf3;
+    border-radius:14px;
+    padding:16px 16px;
+  }
+  .result-card .row{
+    display:flex;
+    justify-content:space-between;
+    font-size:13.5px;
+    margin-bottom:6px;
+    color:var(--text-main);
+  }
+  .result-card .row span.label{color:var(--text-sub);}
+  .tracking-no{
+    font-size:16px;
+    font-weight:700;
+    color:var(--accent);
+    letter-spacing:1px;
+  }
+  .track-btn{
+    display:block;
+    text-align:center;
+    margin-top:12px;
+    padding:12px;
+    border-radius:10px;
+    background:var(--accent);
+    color:#fff;
+    text-decoration:none;
+    font-weight:600;
+    font-size:14px;
+  }
+  .track-btn:hover{background:var(--latte-dark);}
+  .pending-badge{
+    display:inline-block;
+    font-size:12.5px;
+    color:var(--warn-red);
+    background:#fbeceb;
+    padding:6px 10px;
+    border-radius:8px;
+    margin-top:8px;
+  }
+  .empty-state{
+    text-align:center;
+    font-size:13.5px;
+    color:var(--text-sub);
+    padding:18px 4px;
+    line-height:1.8;
+  }
+  .empty-state a{color:var(--accent);font-weight:600;text-decoration:none;}
+  .loading-state{
+    text-align:center;
+    font-size:13px;
+    color:var(--text-sub);
+    padding:14px 4px;
+  }
+  footer{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--text-sub);
+    margin-top:22px;
+    line-height:1.8;
+  }
+  footer a{color:var(--accent);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="logo-text">苷舍 gangshr</div>
+    <div class="sub">宅配進度查詢</div>
+  </div>
+
+  <div class="card">
+    <h1>查詢您的配送進度</h1>
+    <p class="desc">請輸入「訂購人姓名」、「收件人姓名」或「收件人電話」其中一項，即可查詢黑貓宅急便配送單號。</p>
+
+    <label for="queryInput">姓名 / 收件人電話</label>
+    <div class="input-row">
+      <input type="text" id="queryInput" placeholder="例：王小明 或 0912345678" autocomplete="off">
+      <button id="searchBtn">查詢</button>
+    </div>
+    <div class="hint">提醒：宅配編號將於出貨後陸續更新，若尚未出貨可能暫時查詢不到唷！</div>
+    <div id="loadStatus" class="loading-state">資料載入中，請稍候...</div>
+
+    <div id="results"></div>
+  </div>
+
+  <footer>
+    查不到訂單或有任何問題，歡迎透過
+    <a href="https://lin.ee/WvzhpQW" target="_blank" rel="noopener">LINE</a> 或
+    <a href="https://m.me/1463033500627955" target="_blank" rel="noopener">Facebook</a> 聯繫我們
+  </footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script>
+/* =====================================================================
+   訂單資料來源：Google 試算表（發布為 CSV）
+   -----------------------------------------------------------------
+   ★ 只需要改下面這一行網址，換成你自己 Google 試算表「發布到網路」
+     的 CSV 連結，之後只要在 Google 試算表裡改宅配編號、存檔，
+     這個網頁就會自動抓到最新資料，完全不用再碰這個 html 檔案。
+
+   試算表欄位請依序設定（第一列標題文字要一模一樣）：
+   訂購人姓名 | 收件人姓名 | 收件人電話 | 收件地址 | 黑貓宅配編號
+   ===================================================================== */
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9wF5xRPeqnDAe_-qkWHGa8U0xMp4t53jIsyLopU32naF5WLt-B63GBxXtp8gD0-CUzsgnyJYFefdb/pub?output=csv";
+
+let orders = [];
+
+function loadOrders(){
+  const statusEl = document.getElementById('loadStatus');
+  Papa.parse(GOOGLE_SHEET_CSV_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results){
+      orders = results.data.map(row => ({
+        orderer: (row['訂購人姓名'] || '').trim(),
+        recipient: (row['收件人姓名'] || '').trim(),
+        recipientPhone: (row['收件人電話'] || '').trim(),
+        address: (row['收件地址'] || '').trim(),
+        tracking: (row['黑貓宅配編號'] || '').trim()
+      })).filter(o => o.orderer || o.recipient);
+      statusEl.style.display = 'none';
+    },
+    error: function(){
+      statusEl.textContent = '資料載入失敗，請稍後再試，或聯繫苷舍確認。';
+    }
+  });
+}
+loadOrders();
+
+function normalizePhone(str){
+  let digits = (str || "").replace(/[^0-9]/g,"");
+  // Google試算表若把電話欄位存成「數字」格式，發布CSV時開頭的0會被自動吃掉
+  // 這裡統一只取「後9碼」來比對，這樣不管有沒有開頭的0都能配對成功
+  if(digits.length > 9) digits = digits.slice(-9);
+  return digits;
+}
+function maskAddress(addr){
+  // 只顯示到「鄉鎮市區」附近，其餘用 ○ 遮蔽，保護隱私
+  if(!addr) return "";
+  if(addr.length <= 6) return addr;
+  return addr.slice(0,6) + "○○○○";
+}
+
+function search(){
+  const raw = document.getElementById('queryInput').value.trim();
+  const resultsEl = document.getElementById('results');
+  resultsEl.innerHTML = "";
+
+  if(!raw){
+    resultsEl.innerHTML = `<div class="empty-state">請輸入姓名或電話後再查詢</div>`;
+    return;
+  }
+
+  if(orders.length === 0){
+    resultsEl.innerHTML = `<div class="empty-state">資料尚未載入完成，請稍等一下再試一次</div>`;
+    return;
+  }
+
+  const q = raw;
+  const qPhone = normalizePhone(raw);
+
+  const matches = orders.filter(o=>{
+    const nameMatch = (o.orderer && o.orderer.includes(q)) || (o.recipient && o.recipient.includes(q));
+    const phoneMatch = qPhone.length >= 6 && normalizePhone(o.recipientPhone) === qPhone;
+    return nameMatch || phoneMatch;
+  });
+
+  if(matches.length === 0){
+    resultsEl.innerHTML = `
+      <div class="empty-state">
+        查無此筆訂單，請確認輸入的姓名或電話是否正確，<br>
+        或透過 <a href="https://lin.ee/WvzhpQW" target="_blank" rel="noopener">LINE</a>
+        聯繫苷舍為您確認。
+      </div>`;
+    return;
+  }
+
+  matches.forEach(o=>{
+    const card = document.createElement('div');
+    card.className = 'result-card';
+
+    let trackingBlock = "";
+    if(o.tracking && o.tracking.trim() !== ""){
+      const trackUrl = `https://www.t-cat.com.tw/inquire/TraceDetail.aspx?BillID=${encodeURIComponent(o.tracking.trim())}&ReturnUrl=Trace.aspx`;
+      trackingBlock = `
+        <div class="row"><span class="label">黑貓宅配編號</span><span class="tracking-no">${o.tracking}</span></div>
+        <a class="track-btn" href="${trackUrl}" target="_blank" rel="noopener">前往黑貓宅急便查看配送進度</a>
+      `;
+    } else {
+      trackingBlock = `<div class="pending-badge">尚未出貨，宅配編號更新中，請耐心等候</div>`;
+    }
+
+    card.innerHTML = `
+      <div class="row"><span class="label">訂購人姓名</span><span>${o.orderer}</span></div>
+      <div class="row"><span class="label">收件人</span><span>${o.recipient}</span></div>
+      <div class="row"><span class="label">收件人電話</span><span>${o.recipientPhone}</span></div>
+      <div class="row"><span class="label">收件地址</span><span>${maskAddress(o.address)}</span></div>
+      ${trackingBlock}
+    `;
+    resultsEl.appendChild(card);
+  });
+}
+
+document.getElementById('searchBtn').addEventListener('click', search);
+document.getElementById('queryInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') search();
+});
+</script>
+</body>
+</html>
