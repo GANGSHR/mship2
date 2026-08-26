@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>苷舍 中秋禮盒宅配進度查詢</title>
+<title>苷舍 中秋宅配進度查詢</title>
 <style>
   :root{
     --cream:#faf3ea;
@@ -311,7 +311,7 @@ function search(){
       <div class="row"><span class="label">訂購人姓名</span><span>${o.orderer}</span></div>
       <div class="row"><span class="label">收件人</span><span>${o.recipient}</span></div>
       <div class="row"><span class="label">收件人電話</span><span>${o.recipientPhone}</span></div>
-      <div class="row"><span class="label">收件地址</span><span>${maskAddress(o.address)}</span></div>
+      <div class="row"><span class="label">收件地址</span><span>${o.address}</span></div>
       ${trackingBlock}
     `;
     resultsEl.appendChild(card);
