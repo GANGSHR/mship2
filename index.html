@@ -3,325 +3,692 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>苷舍 中秋宅配進度查詢</title>
+<title>苷舍 gangshr｜訂單查詢</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
   :root{
-    --cream:#faf3ea;
-    --card:#ffffff;
-    --latte:#d8c3a5;
-    --latte-dark:#b89b76;
-    --text-main:#4a3b2c;
-    --text-sub:#8a7862;
-    --accent:#a97c50;
-    --warn-red:#c0392b;
-    --success:#6b8f71;
+    --cream:#FFFBFC;
+    --cream-2:#FBEEF1;
+    --card:#FFFFFF;
+    --latte:#E3A0A8;
+    --latte-dark:#C97D89;
+    --ink:#5A4A4D;
+    --ink-soft:#A88B90;
+    --line:#F5DEE3;
+    --ok:#6E9C7B;
+    --ok-bg:#EDF5EE;
+    --warn:#C08A5C;
+    --warn-bg:#FBF1E6;
+    --bad:#C46B6B;
+    --bad-bg:#FBECEC;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
+    font-family:"Noto Sans TC", -apple-system, BlinkMacSystemFont, sans-serif;
+    background:linear-gradient(180deg, var(--cream) 0%, var(--cream-2) 100%);
+    color:var(--ink);
     min-height:100vh;
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
-    background:linear-gradient(180deg,var(--cream) 0%, #f3e7d8 100%);
-    color:var(--text-main);
-    display:flex;
-    justify-content:center;
-    padding:32px 16px;
+    padding-bottom:60px;
   }
-  .wrap{width:100%;max-width:480px;}
-  .brand{
+  .wrap{max-width:640px;margin:0 auto;padding:0 20px;}
+  header.top{
+    padding:40px 20px 24px;
     text-align:center;
-    margin-bottom:22px;
   }
-  .brand .logo-text{
-    font-size:26px;
+  header.top .brand{
+    font-size:14px;
+    letter-spacing:4px;
+    color:var(--latte-dark);
     font-weight:700;
-    letter-spacing:2px;
-    color:var(--accent);
+    margin-bottom:6px;
   }
-  .brand .sub{
-    font-size:13px;
-    color:var(--text-sub);
-    margin-top:4px;
+  header.top h1{
+    font-size:26px;
+    margin:0 0 8px;
+    font-weight:900;
+    color:var(--ink);
   }
-  .card{
+  header.top p{
+    margin:0;
+    font-size:14px;
+    color:var(--ink-soft);
+    line-height:1.7;
+  }
+  .search-card{
     background:var(--card);
     border-radius:20px;
-    padding:28px 22px;
-    box-shadow:0 8px 24px rgba(184,155,118,0.18);
-    border:1px solid #f0e2cf;
+    padding:24px 20px;
+    box-shadow:0 6px 24px rgba(122,98,64,0.08);
+    margin-bottom:24px;
   }
-  h1{
-    font-size:18px;
-    margin:0 0 6px;
-    color:var(--text-main);
-  }
-  p.desc{
-    font-size:13.5px;
-    color:var(--text-sub);
-    line-height:1.6;
-    margin:0 0 20px;
-  }
-  label{
+  .field{margin-bottom:14px;}
+  .field label{
     display:block;
     font-size:13px;
-    color:var(--text-sub);
-    margin-bottom:8px;
+    font-weight:700;
+    color:var(--latte-dark);
+    margin-bottom:6px;
   }
-  .input-row{
-    display:flex;
-    gap:8px;
+  .field .hint{
+    font-weight:400;
+    color:var(--ink-soft);
+    font-size:12px;
+    margin-left:6px;
   }
-  input[type="text"]{
-    flex:1;
-    padding:14px 14px;
-    font-size:15px;
-    border:1.5px solid var(--latte);
+  .field input{
+    width:100%;
+    padding:13px 14px;
     border-radius:12px;
-    background:#fffdfa;
-    color:var(--text-main);
+    border:1.5px solid var(--line);
+    font-size:16px;
+    font-family:inherit;
+    background:#FFFCFD;
+    color:var(--ink);
     outline:none;
     transition:border-color .15s;
   }
-  input[type="text"]:focus{
-    border-color:var(--accent);
-  }
-  button{
-    padding:0 22px;
-    font-size:15px;
-    font-weight:600;
+  .field input:focus{border-color:var(--latte);}
+  button.search-btn{
+    width:100%;
+    padding:14px;
     border:none;
     border-radius:12px;
-    background:var(--accent);
+    background:var(--latte-dark);
     color:#fff;
-    cursor:pointer;
-    transition:background .15s;
-    white-space:nowrap;
-  }
-  button:hover{background:var(--latte-dark);}
-  button:active{transform:scale(0.98);}
-
-  .hint{
-    font-size:12px;
-    color:var(--text-sub);
-    margin-top:10px;
-  }
-
-  #results{margin-top:22px;display:flex;flex-direction:column;gap:14px;}
-
-  .result-card{
-    border:1px solid #f0e2cf;
-    background:#fffaf3;
-    border-radius:14px;
-    padding:16px 16px;
-  }
-  .result-card .row{
-    display:flex;
-    justify-content:space-between;
-    font-size:13.5px;
-    margin-bottom:6px;
-    color:var(--text-main);
-  }
-  .result-card .row span.label{color:var(--text-sub);}
-  .tracking-no{
     font-size:16px;
     font-weight:700;
-    color:var(--accent);
-    letter-spacing:1px;
+    font-family:inherit;
+    cursor:pointer;
+    margin-top:4px;
+    transition:background .15s, transform .1s;
   }
-  .track-btn{
-    display:block;
+  button.search-btn:active{transform:scale(0.98);}
+  button.search-btn:hover{background:#B36A76;}
+  button.search-btn:disabled{background:#EBC6CB;cursor:not-allowed;}
+
+  #status-msg{
     text-align:center;
-    margin-top:12px;
-    padding:12px;
-    border-radius:10px;
-    background:var(--accent);
+    color:var(--ink-soft);
+    font-size:14px;
+    padding:20px 0;
+  }
+
+  .order-card{
+    background:var(--card);
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:18px;
+    box-shadow:0 4px 16px rgba(122,98,64,0.07);
+    border:1px solid var(--line);
+  }
+  .order-card .top-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+  }
+  .top-row .left-tags{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .tag{
+    display:inline-block;
+    font-size:12px;
+    font-weight:700;
+    padding:4px 10px;
+    border-radius:999px;
+    background:var(--cream-2);
+    color:var(--latte-dark);
+    white-space:nowrap;
+  }
+  .tag.delivery{background:#F7E3E7;color:var(--latte-dark);}
+  .tag.pickup{background:#FBEEF1;color:var(--latte-dark);}
+  .status-badge{
+    font-size:12px;
+    font-weight:700;
+    padding:4px 10px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .status-ok{background:var(--ok-bg);color:var(--ok);}
+  .status-warn{background:var(--warn-bg);color:var(--warn);}
+  .status-bad{background:var(--bad-bg);color:var(--bad);}
+
+  /* 出貨進度按鈕 / 排單中徽章 */
+  .ship-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:12px;
+    font-weight:700;
+    padding:5px 12px;
+    border-radius:999px;
+    background:var(--ok);
     color:#fff;
     text-decoration:none;
-    font-weight:600;
-    font-size:14px;
+    white-space:nowrap;
+    transition:background .15s, transform .1s;
   }
-  .track-btn:hover{background:var(--latte-dark);}
-  .pending-badge{
-    display:inline-block;
-    font-size:12.5px;
-    color:var(--warn-red);
-    background:#fbeceb;
-    padding:6px 10px;
-    border-radius:8px;
+  .ship-btn:hover{background:#5C8867;}
+  .ship-btn:active{transform:scale(0.97);}
+  .ship-pending{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:12px;
+    font-weight:700;
+    padding:5px 12px;
+    border-radius:999px;
+    background:var(--warn-bg);
+    color:var(--warn);
+    white-space:nowrap;
+  }
+
+  .buyer-name{
+    font-size:18px;
+    font-weight:900;
+    color:var(--ink);
+    margin-bottom:4px;
+  }
+  .order-time{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .section{margin-bottom:12px;}
+  .section-label{
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+  .section-value{
+    font-size:14.5px;
+    color:var(--ink);
+    line-height:1.6;
+  }
+  .items-list{
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+  .items-list li{
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+    border-bottom:1px dashed var(--line);
+    font-size:14.5px;
+  }
+  .items-list li:last-child{border-bottom:none;}
+  .items-list .qty{color:var(--latte-dark);font-weight:700;}
+  .amount-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-top:12px;
     margin-top:8px;
+    border-top:1.5px solid var(--line);
   }
+  .amount-row .label{font-size:14px;color:var(--ink-soft);}
+  .amount-row .value{font-size:20px;font-weight:900;color:var(--latte-dark);}
+
   .empty-state{
     text-align:center;
-    font-size:13.5px;
-    color:var(--text-sub);
-    padding:18px 4px;
-    line-height:1.8;
+    padding:50px 20px;
+    color:var(--ink-soft);
   }
-  .empty-state a{color:var(--accent);font-weight:600;text-decoration:none;}
-  .loading-state{
+  .empty-state .icon{font-size:40px;margin-bottom:10px;}
+  .empty-state p{font-size:14px;line-height:1.8;margin:4px 0;}
+
+  footer.contact{
+    max-width:640px;
+    margin:30px auto 0;
+    padding:0 20px;
     text-align:center;
+  }
+  footer.contact p{font-size:13px;color:var(--ink-soft);margin-bottom:10px;}
+  .contact-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .contact-links a{
+    display:inline-block;
+    padding:10px 18px;
+    border-radius:999px;
+    background:#fff;
+    color:var(--latte-dark);
+    text-decoration:none;
     font-size:13px;
-    color:var(--text-sub);
-    padding:14px 4px;
+    font-weight:700;
+    border:1.5px solid var(--line);
   }
-  footer{
-    text-align:center;
-    font-size:11.5px;
-    color:var(--text-sub);
-    margin-top:22px;
-    line-height:1.8;
-  }
-  footer a{color:var(--accent);text-decoration:none;}
 </style>
 </head>
 <body>
+
+<header class="top">
+  <div class="brand">GANGSHR</div>
+  <h1>苷舍 訂單查詢</h1>
+  <p>輸入您訂購時填寫的手機號碼，即可查詢訂單內容、金額，<br>宅配訂單也能直接查看出貨進度</p>
+</header>
+
 <div class="wrap">
 
-  <div class="brand">
-    <div class="logo-text">苷舍 gangshr</div>
-    <div class="sub">宅配進度查詢</div>
-  </div>
-
-  <div class="card">
-    <h1>查詢您的配送進度</h1>
-    <p class="desc">請輸入「訂購人姓名」、「收件人姓名」或「收件人電話」其中一項，即可查詢黑貓宅急便配送單號。</p>
-
-    <label for="queryInput"></label>
-    <div class="input-row">
-      <input type="text" id="queryInput" placeholder="例：王小明 或 0912345678" autocomplete="off">
-      <button id="searchBtn">查詢</button>
+  <div class="search-card">
+    <div class="field">
+      <label for="phoneInput">聯絡電話</label>
+      <input id="phoneInput" type="tel" placeholder="請輸入訂購時填寫的手機號碼" autocomplete="tel" inputmode="numeric" onkeydown="if(event.key==='Enter') runSearch();">
     </div>
-    <div class="hint">提醒：宅配編號將於出貨後陸續更新，若尚未出貨暫時查詢不到唷！</div>
-    <div id="loadStatus" class="loading-state">資料載入中，請稍候...</div>
-
-    <div id="results"></div>
+    <button class="search-btn" id="searchBtn" onclick="runSearch()">查詢訂單</button>
   </div>
 
-  <footer>
-    查不到訂單或有任何問題，歡迎透過
-    <a href="https://lin.ee/WvzhpQW" target="_blank" rel="noopener">LINE</a> 或
-    <a href="https://m.me/1463033500627955" target="_blank" rel="noopener">Facebook</a> 聯繫我們
-  </footer>
+  <div id="status-msg"></div>
+  <div id="results"></div>
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<footer class="contact">
+  <p>查不到訂單，或資料有疑問嗎？歡迎透過以下管道聯繫我們</p>
+  <div class="contact-links">
+    <a href="https://lin.ee/WvzhpQW" target="_blank" rel="noopener">LINE 官方帳號</a>
+    <a href="https://m.me/1463033500627955" target="_blank" rel="noopener">Facebook Messenger</a>
+  </div>
+</footer>
+
 <script>
-/* =====================================================================
-   訂單資料來源：Google 試算表（發布為 CSV）
-   -----------------------------------------------------------------
-   ★ 只需要改下面這一行網址，換成你自己 Google 試算表「發布到網路」
-     的 CSV 連結，之後只要在 Google 試算表裡改宅配編號、存檔，
+/* =========================================================================
+   設定區：請在這裡管理您的訂單資料來源
+   -------------------------------------------------------------------------
+   每一款訂單（宅配 / 自取）各自對應一個「已發布為 CSV」的 Google 試算表連結。
+   之後不管是新增檔期、新增商品，只要欄位命名邏輯不變（例如商品名稱直接當
+   欄位標題、數量填在該欄），完全不需要改這支程式，只要：
+     1. 開新的訂單表單 → Google 表單會自動建立新的回覆試算表
+     2. 把新試算表「發布到網路」→ 選擇 CSV 格式 → 複製連結
+     3. 把連結貼到下方陣列，或直接取代舊的連結（若沿用同一份表單）
+   ========================================================================= */
+const ORDER_SOURCES = [
+  {
+    type: "delivery",
+    label: "宅配",
+    csvUrl: "https://docs.google.com/spreadsheets/d/19mBrq4YV4k50hMVYKpiihWkhbo8Wx1ZuAsofOFCA6u8/export?format=csv&gid=0"
+  },
+  {
+    type: "pickup",
+    label: "自取",
+    csvUrl: "https://docs.google.com/spreadsheets/d/1BQevuwCMU2GujAMycFqsQPJ-uW2MirjeHyh6YSQ5FHw/export?format=csv&gid=0"
+  }
+  // 若之後同時有第三款訂單在收單（例如活動禮盒），直接在這裡多加一組即可
+];
+
+/* -------------------------------------------------------------------------
+   宅配出貨進度資料來源（黑貓宅配編號）
+   -----------------------------------------------------------------------
+   ★ 只需要改下面這一行網址，換成你自己 Google 試算表「發布到網路」的
+     CSV 連結，之後只要在 Google 試算表裡更新黑貓宅配編號、存檔，
      這個網頁就會自動抓到最新資料，完全不用再碰這個 html 檔案。
 
    試算表欄位請依序設定（第一列標題文字要一模一樣）：
    訂購人姓名 | 收件人姓名 | 收件人電話 | 收件地址 | 黑貓宅配編號
-   ===================================================================== */
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9wF5xRPeqnDAe_-qkWHGa8U0xMp4t53jIsyLopU32naF5WLt-B63GBxXtp8gD0-CUzsgnyJYFefdb/pub?output=csv";
+   ========================================================================= */
+const TRACKING_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9wF5xRPeqnDAe_-qkWHGa8U0xMp4t53jIsyLopU32naF5WLt-B63GBxXtp8gD0-CUzsgnyJYFefdb/pub?output=csv";
 
-let orders = [];
+/* 這些關鍵字出現在欄位標題中，代表這欄是「基本資料 / 費用」而不是「商品品項」 */
+const META_KEYWORDS = [
+  "時間","戳記","mail","信箱","暱稱","姓名","電話","地址","備註",
+  "日期","方案","金額","費用","許願","數量","統編","發票","抬頭","盒數"
+];
 
-function loadOrders(){
-  const statusEl = document.getElementById('loadStatus');
-  Papa.parse(GOOGLE_SHEET_CSV_URL, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-    complete: function(results){
-      orders = results.data.map(row => ({
-        orderer: (row['訂購人姓名'] || '').trim(),
-        recipient: (row['收件人姓名'] || '').trim(),
-        recipientPhone: (row['收件人電話'] || '').trim(),
-        address: (row['收件地址'] || '').trim(),
-        tracking: (row['黑貓宅配編號'] || '').trim()
-      })).filter(o => o.orderer || o.recipient);
-      statusEl.style.display = 'none';
-    },
-    error: function(){
-      statusEl.textContent = '資料載入失敗，請稍後再試，或聯繫苷舍確認。';
+/* 用來把不同表單的欄位名稱，對應成統一的欄位 key */
+const META_MATCHERS = [
+  { key: "time",           patterns: ["送出時間", "時間戳記"] },
+  { key: "email",          patterns: ["電子郵件", "email", "信箱"] },
+  { key: "social",         patterns: ["暱稱"] },
+  { key: "buyerName",      patterns: ["訂購人姓名", "中文姓名"] },
+  { key: "buyerPhone",     patterns: ["聯絡電話"] },
+  { key: "recipientName",  patterns: ["收件人姓名"] },
+  { key: "recipientPhone", patterns: ["收件人電話"] },
+  { key: "address",        patterns: ["收件地址"] },
+  { key: "shipNote",       patterns: ["寄件備註"] },
+  { key: "pickupDate",     patterns: ["自取日期"] },
+  { key: "wish1",          patterns: ["出貨許願第一順位"] },
+  { key: "wish2",          patterns: ["出貨許願第二順位"] },
+  { key: "bagQty",         patterns: ["提袋數量"] },
+  { key: "bagFee",         patterns: ["提袋加收費用"] },
+  { key: "shipPlan",       patterns: ["運費方案", "盒數"] },
+  { key: "shipFee",        patterns: ["運費金額"] },
+  { key: "productAmount",  patterns: ["商品金額", "商品總金額"] },
+  { key: "totalAmount",    patterns: ["合計金額"] }
+];
+
+/* =========================== 以下為程式邏輯，一般不需要修改 =========================== */
+
+function normalizeText(s){
+  return (s === null || s === undefined) ? "" : String(s).trim();
+}
+function normalizePhone(s){
+  const digits = normalizeText(s).replace(/\D/g, "");
+  return digits.slice(-9); // 只比對後9碼，避免補0被試算表吃掉造成無法比對
+}
+function isNumericValue(v){
+  const t = normalizeText(v);
+  if (t === "") return false;
+  return !isNaN(Number(t));
+}
+function matchMeta(header){
+  const h = normalizeText(header).toLowerCase();
+  for (const m of META_MATCHERS){
+    if (m.patterns.some(p => h.includes(p.toLowerCase()))) return m.key;
+  }
+  return null;
+}
+function isMetaHeader(header){
+  const h = normalizeText(header).toLowerCase();
+  return META_KEYWORDS.some(k => h.includes(k.toLowerCase()));
+}
+function looksLikeStatus(v){
+  const t = normalizeText(v);
+  if (t === "") return false;
+  return /✅|❌|⚠️|已確認|已付款|付款|取消|已出貨|已寄出|待確認|退款/.test(t);
+}
+
+function parseSheetToOrders(csvText, sourceType, sourceLabel){
+  const parsed = Papa.parse(csvText, { skipEmptyLines: true });
+  const rows = parsed.data;
+  if (!rows || rows.length < 2) return [];
+  const headers = rows[0].map(h => normalizeText(h));
+  const orders = [];
+
+  for (let r = 1; r < rows.length; r++){
+    const row = rows[r];
+    if (!row || row.every(c => normalizeText(c) === "")) continue;
+
+    const meta = {};
+    const items = [];
+    const notes = [];
+    let status = "";
+
+    for (let i = 0; i < headers.length; i++){
+      const header = headers[i];
+      const value = row[i];
+      const text = normalizeText(value);
+      if (text === "" && header === "") continue;
+
+      const metaKey = header ? matchMeta(header) : null;
+
+      if (metaKey){
+        meta[metaKey] = text;
+        continue;
+      }
+      if (header === ""){
+        // 沒有標題的欄位：通常是人工加註的「訂單狀態」或備註
+        if (looksLikeStatus(text)) status = text;
+        else if (text !== "") notes.push(text);
+        continue;
+      }
+      if (isMetaHeader(header)){
+        // 其他已知的基本資料/費用類欄位，但沒特別對應到 meta key，先略過顯示
+        continue;
+      }
+      // 其餘欄位視為「商品品項」：欄位名稱＝品項名稱，數值＝數量
+      if (isNumericValue(value)){
+        const qty = Number(text);
+        if (qty > 0){
+          items.push({ name: header, qty });
+        }
+      } else if (text !== ""){
+        notes.push(`${header}：${text}`);
+      }
+    }
+
+    const buyerName = meta.buyerName || "";
+    if (!buyerName) continue; // 沒有姓名的空行略過
+
+    orders.push({
+      sourceType, sourceLabel,
+      time: meta.time || "",
+      buyerName,
+      buyerPhone: meta.buyerPhone || "",
+      email: meta.email || "",
+      social: meta.social || "",
+      recipientName: meta.recipientName || "",
+      recipientPhone: meta.recipientPhone || "",
+      address: meta.address || "",
+      shipNote: meta.shipNote || "",
+      pickupDate: meta.pickupDate || "",
+      wish1: meta.wish1 || "",
+      wish2: meta.wish2 || "",
+      bagQty: meta.bagQty || "",
+      bagFee: meta.bagFee || "",
+      shipPlan: meta.shipPlan || "",
+      shipFee: meta.shipFee || "",
+      productAmount: meta.productAmount || "",
+      totalAmount: meta.totalAmount || "",
+      items, notes, status,
+      tracking: "" // 稍後比對黑貓宅配編號後填入
+    });
+  }
+  return orders;
+}
+
+let cachedOrders = null;
+let cachedTracking = null;
+
+async function loadAllOrders(){
+  if (cachedOrders) return cachedOrders;
+  const all = [];
+  for (const src of ORDER_SOURCES){
+    if (!src.csvUrl || src.csvUrl.startsWith("PUT_YOUR_")) continue;
+    try{
+      const res = await fetch(src.csvUrl + (src.csvUrl.includes("?") ? "&" : "?") + "t=" + Date.now());
+      const text = await res.text();
+      const orders = parseSheetToOrders(text, src.type, src.label);
+      all.push(...orders);
+    }catch(e){
+      console.error("讀取失敗：", src.label, e);
+    }
+  }
+  cachedOrders = all;
+  return all;
+}
+
+function loadTrackingData(){
+  if (cachedTracking) return Promise.resolve(cachedTracking);
+  return new Promise((resolve) => {
+    Papa.parse(TRACKING_CSV_URL + (TRACKING_CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now(), {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results){
+        cachedTracking = (results.data || []).map(row => ({
+          orderer: normalizeText(row["訂購人姓名"]),
+          recipient: normalizeText(row["收件人姓名"]),
+          recipientPhone: normalizeText(row["收件人電話"]),
+          tracking: normalizeText(row["黑貓宅配編號"])
+        }));
+        resolve(cachedTracking);
+      },
+      error: function(){
+        console.error("宅配進度資料讀取失敗");
+        cachedTracking = [];
+        resolve(cachedTracking);
+      }
+    });
+  });
+}
+
+/* 幫宅配訂單比對出對應的黑貓宅配編號：優先用收件人電話比對，
+   找不到再退而用姓名比對，避免其中一份表單漏填某個欄位 */
+function attachTracking(orders, trackingList){
+  if (!trackingList || !trackingList.length) return;
+  orders.forEach(o => {
+    if (o.sourceType !== "delivery") return;
+    const phoneNorm = normalizePhone(o.recipientPhone || o.buyerPhone);
+    let match = null;
+    if (phoneNorm){
+      match = trackingList.find(t => normalizePhone(t.recipientPhone) === phoneNorm);
+    }
+    if (!match && o.recipientName){
+      match = trackingList.find(t => t.recipient && t.recipient === o.recipientName);
+    }
+    if (!match && o.buyerName){
+      match = trackingList.find(t => t.orderer && t.orderer === o.buyerName);
+    }
+    if (match && match.tracking){
+      o.tracking = match.tracking;
     }
   });
 }
-loadOrders();
 
-function normalizePhone(str){
-  let digits = (str || "").replace(/[^0-9]/g,"");
-  // Google試算表若把電話欄位存成「數字」格式，發布CSV時開頭的0會被自動吃掉
-  // 這裡統一只取「後9碼」來比對，這樣不管有沒有開頭的0都能配對成功
-  if(digits.length > 9) digits = digits.slice(-9);
-  return digits;
-}
-function maskAddress(addr){
-  // 只顯示到「鄉鎮市區」附近，其餘用 ○ 遮蔽，保護隱私
-  if(!addr) return "";
-  if(addr.length <= 6) return addr;
-  return addr.slice(0,6) + "○○○○";
+function statusClass(status){
+  if (/✅|已確認|已付款|已出貨|已寄出/.test(status)) return "status-ok";
+  if (/❌|取消|退款/.test(status)) return "status-bad";
+  if (status) return "status-warn";
+  return "";
 }
 
-function search(){
-  const raw = document.getElementById('queryInput').value.trim();
-  const resultsEl = document.getElementById('results');
+function renderShippingButton(o){
+  if (o.sourceType !== "delivery") return "";
+  if (o.tracking){
+    const trackUrl = `https://www.t-cat.com.tw/inquire/TraceDetail.aspx?BillID=${encodeURIComponent(o.tracking)}&ReturnUrl=Trace.aspx`;
+    return `<a class="ship-btn" href="${trackUrl}" target="_blank" rel="noopener">📦 查看出貨進度</a>`;
+  }
+  return `<span class="ship-pending">🚚 正在排單中，請稍待</span>`;
+}
+
+function renderOrder(o){
+  const tagClass = o.sourceType === "delivery" ? "delivery" : "pickup";
+  let html = `<div class="order-card">`;
+  html += `<div class="top-row">`;
+  html += `<div class="left-tags">`;
+  html += `<span class="tag ${tagClass}">${o.sourceLabel}</span>`;
+  html += renderShippingButton(o);
+  html += `</div>`;
+  if (o.status){
+    html += `<span class="status-badge ${statusClass(o.status)}">${escapeHtml(o.status)}</span>`;
+  }
+  html += `</div>`;
+  if (o.buyerName) html += `<div class="buyer-name">${escapeHtml(o.buyerName)}</div>`;
+  if (o.time) html += `<div class="order-time">訂購時間：${escapeHtml(o.time)}</div>`;
+
+  // 取件方式資訊
+  if (o.sourceType === "pickup" && o.pickupDate){
+    html += section("自取時段", escapeHtml(o.pickupDate));
+  }
+  if (o.sourceType === "delivery"){
+    if (o.recipientName || o.recipientPhone){
+      html += section("收件人", `${escapeHtml(o.recipientName)}　${escapeHtml(o.recipientPhone)}`);
+    }
+    if (o.address) html += section("收件地址", escapeHtml(o.address));
+    if (o.shipNote) html += section("寄件備註", escapeHtml(o.shipNote));
+    if (o.wish1 || o.wish2){
+      const wishes = [o.wish1, o.wish2].filter(Boolean).map(escapeHtml).join("　／　");
+      html += section("出貨許願日期", wishes);
+    }
+  }
+
+  // 商品品項
+  if (o.items.length){
+    html += `<div class="section"><div class="section-label">訂購品項</div><ul class="items-list">`;
+    o.items.forEach(it => {
+      html += `<li><span>${escapeHtml(it.name)}</span><span class="qty">x${it.qty}</span></li>`;
+    });
+    html += `</ul></div>`;
+  }
+
+  // 提袋 / 運費
+  const extras = [];
+  if (o.bagQty && Number(o.bagQty) > 0) extras.push(`提袋 x${o.bagQty}${o.bagFee ? `（+$${o.bagFee}）` : ""}`);
+  if (o.shipPlan) extras.push(`運費方案：${o.shipPlan}${o.shipFee ? `（$${o.shipFee}）` : ""}`);
+  if (extras.length) html += section("其他費用", extras.map(escapeHtml).join("　"));
+
+  if (o.notes.length){
+    html += section("備註", o.notes.map(escapeHtml).join("　"));
+  }
+
+  // 金額
+  if (o.totalAmount){
+    html += `<div class="amount-row"><span class="label">合計金額</span><span class="value">$${escapeHtml(o.totalAmount)}</span></div>`;
+  } else if (o.productAmount){
+    html += `<div class="amount-row"><span class="label">商品金額</span><span class="value">$${escapeHtml(o.productAmount)}</span></div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+function section(label, value){
+  return `<div class="section"><div class="section-label">${label}</div><div class="section-value">${value}</div></div>`;
+}
+
+function escapeHtml(s){
+  return normalizeText(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+async function runSearch(){
+  const phone = normalizeText(document.getElementById("phoneInput").value);
+  const statusEl = document.getElementById("status-msg");
+  const resultsEl = document.getElementById("results");
+  const btn = document.getElementById("searchBtn");
+
+  const phoneNorm = normalizePhone(phone);
+  if (!phoneNorm){
+    statusEl.textContent = "請先輸入手機號碼再查詢";
+    resultsEl.innerHTML = "";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "查詢中...";
+  statusEl.textContent = "查詢中，請稍候...";
   resultsEl.innerHTML = "";
 
-  if(!raw){
-    resultsEl.innerHTML = `<div class="empty-state">請輸入姓名或電話後再查詢</div>`;
-    return;
-  }
+  const [allOrders, trackingList] = await Promise.all([
+    loadAllOrders(),
+    loadTrackingData()
+  ]);
 
-  if(orders.length === 0){
-    resultsEl.innerHTML = `<div class="empty-state">資料尚未載入完成，請稍等一下再試一次</div>`;
-    return;
-  }
+  const matched = allOrders
+    .filter(o => normalizePhone(o.buyerPhone) === phoneNorm)
+    .sort((a, b) => (b.time || "").localeCompare(a.time || ""));
 
-  const q = raw;
-  const qPhone = normalizePhone(raw);
+  attachTracking(matched, trackingList);
 
-  const matches = orders.filter(o=>{
-    const nameMatch = (o.orderer && o.orderer.includes(q)) || (o.recipient && o.recipient.includes(q));
-    const phoneMatch = qPhone.length >= 6 && normalizePhone(o.recipientPhone) === qPhone;
-    return nameMatch || phoneMatch;
-  });
+  btn.disabled = false;
+  btn.textContent = "查詢訂單";
 
-  if(matches.length === 0){
+  if (matched.length === 0){
+    statusEl.textContent = "";
     resultsEl.innerHTML = `
       <div class="empty-state">
-        查無此筆訂單，請確認輸入的姓名或電話是否正確，<br>
-        或透過 <a href="https://lin.ee/WvzhpQW" target="_blank" rel="noopener">LINE</a>
-        聯繫苷舍為您確認。
+        <div class="icon">🔍</div>
+        <p>查無符合「${escapeHtml(phone)}」的訂單</p>
+        <p>請確認手機號碼是否與訂購時填寫的一致</p>
       </div>`;
     return;
   }
 
-  matches.forEach(o=>{
-    const card = document.createElement('div');
-    card.className = 'result-card';
-
-    let trackingBlock = "";
-    if(o.tracking && o.tracking.trim() !== ""){
-      const trackUrl = `https://www.t-cat.com.tw/inquire/TraceDetail.aspx?BillID=${encodeURIComponent(o.tracking.trim())}&ReturnUrl=Trace.aspx`;
-      trackingBlock = `
-        <div class="row"><span class="label">黑貓宅配編號</span><span class="tracking-no">${o.tracking}</span></div>
-        <a class="track-btn" href="${trackUrl}" target="_blank" rel="noopener">前往黑貓宅急便查看配送進度</a>
-      `;
-    } else {
-      trackingBlock = `<div class="pending-badge">尚未出貨，宅配編號更新中，請耐心等候</div>`;
-    }
-
-    card.innerHTML = `
-      <div class="row"><span class="label">訂購人姓名</span><span>${o.orderer}</span></div>
-      <div class="row"><span class="label">收件人</span><span>${o.recipient}</span></div>
-      <div class="row"><span class="label">收件人電話</span><span>${o.recipientPhone}</span></div>
-      <div class="row"><span class="label">收件地址</span><span>${o.address}</span></div>
-      ${trackingBlock}
-    `;
-    resultsEl.appendChild(card);
-  });
+  statusEl.textContent = `找到 ${matched.length} 筆訂單`;
+  resultsEl.innerHTML = matched.map(renderOrder).join("");
 }
 
-document.getElementById('searchBtn').addEventListener('click', search);
-document.getElementById('queryInput').addEventListener('keydown', e=>{
-  if(e.key === 'Enter') search();
+/* 支援表單送出後自動帶入電話並直接查詢，
+   例如：order-query.html?phone=0912345678 */
+window.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const phone = params.get("phone");
+  if (phone){
+    document.getElementById("phoneInput").value = phone;
+    runSearch();
+  }
 });
 </script>
+
 </body>
 </html>
