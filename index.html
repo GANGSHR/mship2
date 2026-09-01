@@ -161,35 +161,86 @@
   .status-warn{background:var(--warn-bg);color:var(--warn);}
   .status-bad{background:var(--bad-bg);color:var(--bad);}
 
-  /* 出貨進度按鈕 / 排單中徽章 */
-  .ship-btn{
+  /* 訂單進度步驟條 */
+  .progress-block{
+    margin:14px 0 16px;
+    padding-bottom:16px;
+    border-bottom:1px dashed var(--line);
+  }
+  .stepper{
+    display:flex;
+    align-items:flex-start;
+    padding:0 2px;
+  }
+  .step{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    position:relative;
+    min-width:0;
+  }
+  .step:not(:last-child)::after{
+    content:'';
+    position:absolute;
+    top:10px;
+    left:calc(50% + 14px);
+    width:calc(100% - 28px);
+    height:2px;
+    background:var(--line);
+    z-index:0;
+  }
+  .step.completed:not(:last-child)::after{background:var(--latte);}
+  .step .dot{
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:#fff;
+    border:2px solid var(--line);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:900;
+    z-index:1;
+    transition:background .15s, border-color .15s, box-shadow .15s;
+  }
+  .step.completed .dot{background:var(--latte-dark);border-color:var(--latte-dark);}
+  .step.current .dot{background:#fff;border-color:var(--warn);box-shadow:0 0 0 3px var(--warn-bg);}
+  .step .label{
+    font-size:10.5px;
+    color:var(--ink-soft);
+    margin-top:6px;
+    text-align:center;
+    line-height:1.3;
+    white-space:nowrap;
+  }
+  .step.completed .label{color:var(--latte-dark);font-weight:700;}
+  .step.current .label{color:var(--warn);font-weight:700;}
+  .step-link{display:contents;cursor:pointer;}
+  .step-link:hover .dot{box-shadow:0 0 0 3px var(--cream-2);}
+  .step-link:hover .label{text-decoration:underline;}
+  .track-btn{
     display:inline-flex;
     align-items:center;
-    gap:4px;
-    font-size:12px;
-    font-weight:700;
-    padding:5px 12px;
+    justify-content:center;
+    gap:6px;
+    width:auto;
+    max-width:100%;
+    padding:9px 20px;
+    margin:14px auto 0;
     border-radius:999px;
-    background:var(--ok);
+    background:var(--latte-dark);
     color:#fff;
     text-decoration:none;
-    white-space:nowrap;
-    transition:background .15s, transform .1s;
-  }
-  .ship-btn:hover{background:#5C8867;}
-  .ship-btn:active{transform:scale(0.97);}
-  .ship-pending{
-    display:inline-flex;
-    align-items:center;
-    gap:4px;
-    font-size:12px;
+    font-size:13px;
     font-weight:700;
-    padding:5px 12px;
-    border-radius:999px;
-    background:var(--warn-bg);
-    color:var(--warn);
     white-space:nowrap;
   }
+  .track-btn-wrap{display:flex;justify-content:center;}
+  .track-btn:hover{background:#B36A76;}
+  .track-btn:active{transform:scale(0.98);}
 
   .buyer-name{
     font-size:18px;
@@ -221,13 +272,22 @@
   }
   .items-list li{
     display:flex;
-    justify-content:space-between;
+    align-items:baseline;
     padding:6px 0;
     border-bottom:1px dashed var(--line);
     font-size:14.5px;
+    gap:8px;
   }
   .items-list li:last-child{border-bottom:none;}
-  .items-list .qty{color:var(--latte-dark);font-weight:700;}
+  .items-list .name{white-space:nowrap;}
+  .items-list .fill{
+    flex:1;
+    border-bottom:1px dotted var(--ink-soft);
+    opacity:0.4;
+    margin-bottom:4px;
+    min-width:12px;
+  }
+  .items-list .qty{color:var(--latte-dark);font-weight:700;white-space:nowrap;}
   .amount-row{
     display:flex;
     justify-content:space-between;
@@ -325,14 +385,32 @@ const ORDER_SOURCES = [
 ];
 
 /* -------------------------------------------------------------------------
-   宅配出貨進度資料來源（黑貓宅配編號）
+   訂單進度資料來源（已入單 / 款項確認 / 黑貓宅配編號）
    -----------------------------------------------------------------------
    ★ 只需要改下面這一行網址，換成你自己 Google 試算表「發布到網路」的
-     CSV 連結，之後只要在 Google 試算表裡更新黑貓宅配編號、存檔，
+     CSV 連結。之後不管是宅配還是自取訂單，妳只要在這份試算表裡打字更新，
      這個網頁就會自動抓到最新資料，完全不用再碰這個 html 檔案。
 
    試算表欄位請依序設定（第一列標題文字要一模一樣）：
-   訂購人姓名 | 收件人姓名 | 收件人電話 | 收件地址 | 黑貓宅配編號
+   訂購時間 | 訂購人姓名 | 收件人姓名 | 款項確認 | 收件人電話 | 收件地址 | 黑貓宅配編號
+
+   填寫方式：
+   - 訂購時間：直接複製貼上原始訂單試算表裡「送出時間」那一欄的值
+     （就是妳平常拉下來對帳、貼到 xlsx 時看到的那個時間戳記）。
+     ★ 如果同一支手機號碼曾經填過兩張單（不同天、或宅配+自取都填），
+     只靠電話會沒辦法分辨是哪一筆，加上這個不會重複的時間戳記，
+     才能準確比對到正確的那一筆訂單。如果確定這支電話只訂過一次，
+     這欄留空也可以正常比對。
+   - 收件人電話：不管宅配還是自取都填「聯絡電話」，自取訂單就填客人
+     自己的手機號碼即可（用來自動比對是哪一筆訂單）；建議設成
+     「純文字」格式，避免開頭 0 被吃掉。
+   - 款項確認：只要那一格「有填任何文字」（例如打 V、✓ 都可以）就算
+     完成付款確認；空白＝尚未確認。這格完全在自己電腦上打開試算表
+     勾就好，跟妳現在填黑貓編號的習慣一樣。
+     （「已入單」不用另外標示——客人查得到這筆訂單，就代表資料已經
+     在系統裡了，網頁會自動把「已入單」顯示成完成狀態。）
+   - 收件人姓名／收件地址／黑貓宅配編號：只有宅配訂單需要填，自取訂單
+     這三格留空即可，網頁會自動只顯示到「款項確認」為止。
    ========================================================================= */
 const TRACKING_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS9wF5xRPeqnDAe_-qkWHGa8U0xMp4t53jIsyLopU32naF5WLt-B63GBxXtp8gD0-CUzsgnyJYFefdb/pub?output=csv";
 
@@ -468,7 +546,8 @@ function parseSheetToOrders(csvText, sourceType, sourceLabel){
       productAmount: meta.productAmount || "",
       totalAmount: meta.totalAmount || "",
       items, notes, status,
-      tracking: "" // 稍後比對黑貓宅配編號後填入
+      paidOk: false,    // 稍後比對「款項確認」欄位後更新
+      tracking: ""      // 稍後比對黑貓宅配編號後填入
     });
   }
   return orders;
@@ -505,8 +584,10 @@ function loadTrackingData(){
       complete: function(results){
         cachedTracking = (results.data || []).map(row => ({
           orderer: normalizeText(row["訂購人姓名"]),
+          orderTime: normalizeText(row["訂購時間"]),
+          paid: normalizeText(row["款項確認"]),
           recipient: normalizeText(row["收件人姓名"]),
-          recipientPhone: normalizeText(row["收件人電話"]),
+          phone: normalizeText(row["收件人電話"]),
           tracking: normalizeText(row["黑貓宅配編號"])
         }));
         resolve(cachedTracking);
@@ -520,25 +601,64 @@ function loadTrackingData(){
   });
 }
 
-/* 幫宅配訂單比對出對應的黑貓宅配編號：優先用收件人電話比對，
-   找不到再退而用姓名比對，避免其中一份表單漏填某個欄位 */
-function attachTracking(orders, trackingList){
-  if (!trackingList || !trackingList.length) return;
+/* 只要那一格有填任何文字，就算完成該階段 */
+function isChecked(v){
+  return normalizeText(v) !== "";
+}
+/* 時間戳記比對用：去除所有空白差異，避免格式差一個空格就比對不到 */
+function normalizeTimeKey(s){
+  return normalizeText(s).replace(/\s+/g, "");
+}
+
+/* 幫每一筆訂單（宅配＋自取）比對出對應的「已入單／款項確認／黑貓宅配編號」。
+   比對優先順序：
+   1. 電話＋訂購時間都吻合 → 最精準，一定是同一筆訂單
+   2. 只有電話吻合，但這支電話在狀態表裡「只出現一次」→ 可以放心比對
+   3. 只有電話吻合，但這支電話出現「兩筆以上」且沒有時間可以分辨
+      → 不亂猜，維持在「已入單」以前的狀態，避免把不同筆訂單的
+        狀態搞混（這種情況只要幫那幾列補上「訂購時間」就會恢復正常）
+   找不到電話時，才退而用姓名比對（同樣套用上述唯一性判斷）*/
+function findStatusMatch(o, statusList){
+  const buyerPhoneNorm = normalizePhone(o.buyerPhone);
+  const recipientPhoneNorm = normalizePhone(o.recipientPhone);
+  const orderTimeKey = normalizeTimeKey(o.time);
+
+  function byPhone(norm){
+    return statusList.filter(t => normalizePhone(t.phone) === norm);
+  }
+  function byName(){
+    return statusList.filter(t =>
+      (t.recipient && t.recipient === o.recipientName) ||
+      (t.orderer && t.orderer === o.buyerName)
+    );
+  }
+
+  let candidates = [];
+  if (buyerPhoneNorm) candidates = byPhone(buyerPhoneNorm);
+  if (!candidates.length && recipientPhoneNorm) candidates = byPhone(recipientPhoneNorm);
+  if (!candidates.length) candidates = byName();
+  if (!candidates.length) return null;
+
+  if (candidates.length === 1) return candidates[0];
+
+  // 有多筆候選，先用「訂購時間」精準篩選
+  if (orderTimeKey){
+    const exact = candidates.filter(t => normalizeTimeKey(t.orderTime) === orderTimeKey);
+    if (exact.length === 1) return exact[0];
+  }
+  // 仍然無法唯一判定，不亂猜
+  return null;
+}
+
+function attachStatus(orders, statusList){
+  if (!statusList || !statusList.length) return;
   orders.forEach(o => {
-    if (o.sourceType !== "delivery") return;
-    const phoneNorm = normalizePhone(o.recipientPhone || o.buyerPhone);
-    let match = null;
-    if (phoneNorm){
-      match = trackingList.find(t => normalizePhone(t.recipientPhone) === phoneNorm);
-    }
-    if (!match && o.recipientName){
-      match = trackingList.find(t => t.recipient && t.recipient === o.recipientName);
-    }
-    if (!match && o.buyerName){
-      match = trackingList.find(t => t.orderer && t.orderer === o.buyerName);
-    }
-    if (match && match.tracking){
-      o.tracking = match.tracking;
+    const match = findStatusMatch(o, statusList);
+    if (match){
+      o.paidOk = isChecked(match.paid);
+      if (o.sourceType === "delivery" && match.tracking){
+        o.tracking = match.tracking;
+      }
     }
   });
 }
@@ -550,13 +670,49 @@ function statusClass(status){
   return "";
 }
 
-function renderShippingButton(o){
-  if (o.sourceType !== "delivery") return "";
-  if (o.tracking){
-    const trackUrl = `https://www.t-cat.com.tw/inquire/TraceDetail.aspx?BillID=${encodeURIComponent(o.tracking)}&ReturnUrl=Trace.aspx`;
-    return `<a class="ship-btn" href="${trackUrl}" target="_blank" rel="noopener">📦 查看出貨進度</a>`;
+/* 產生訂單進度步驟條
+   宅配：已入單 → 款項確認 → 排單中 → 已出貨（最後一步有黑貓編號時可點擊查詢）
+   自取：已入單 → 款項確認（到此結束，不需要額外的取貨欄位） */
+function renderProgressStepper(o){
+  const isDelivery = o.sourceType === "delivery";
+  const labels = isDelivery ? ["已入單", "款項確認", "排單中", "已出貨"] : ["已入單", "款項確認"];
+
+  // 「已入單」不需要另外標示：客人查得到這筆訂單，就代表資料已經在
+  // 系統裡了，所以一律視為完成，接下來只看「款項確認」跟黑貓宅配編號
+  let doneCount;
+  if (isDelivery){
+    if (o.tracking) doneCount = 4;
+    else if (o.paidOk) doneCount = 2;      // 已入單、款項確認完成，排單中為目前進行式
+    else doneCount = 1;
+  } else {
+    doneCount = o.paidOk ? 2 : 1;
   }
-  return `<span class="ship-pending">🚚 正在排單中，請稍待</span>`;
+
+  const trackUrl = (isDelivery && o.tracking)
+    ? `https://www.t-cat.com.tw/inquire/TraceDetail.aspx?BillID=${encodeURIComponent(o.tracking)}&ReturnUrl=Trace.aspx`
+    : null;
+
+  let html = `<div class="progress-block"><div class="stepper">`;
+  labels.forEach((label, idx) => {
+    let cls = "step";
+    let dot = "";
+    if (idx < doneCount){
+      cls += " completed";
+      dot = "✓";
+    } else if (idx === doneCount && doneCount < labels.length){
+      cls += " current";
+    }
+    const isLast = idx === labels.length - 1;
+    const wrapOpen = (isLast && trackUrl) ? `<a class="step-link" href="${trackUrl}" target="_blank" rel="noopener">` : "";
+    const wrapClose = (isLast && trackUrl) ? `</a>` : "";
+    html += `${wrapOpen}<div class="${cls}"><div class="dot">${dot}</div><div class="label">${label}</div></div>${wrapClose}`;
+  });
+  html += `</div>`;
+  if (trackUrl){
+    html += `<div class="track-btn-wrap"><a class="track-btn" href="${trackUrl}" target="_blank" rel="noopener">📦 查看宅配出貨進度</a></div>`;
+  }
+  html += `</div>`;
+  return html;
 }
 
 function renderOrder(o){
@@ -565,7 +721,6 @@ function renderOrder(o){
   html += `<div class="top-row">`;
   html += `<div class="left-tags">`;
   html += `<span class="tag ${tagClass}">${o.sourceLabel}</span>`;
-  html += renderShippingButton(o);
   html += `</div>`;
   if (o.status){
     html += `<span class="status-badge ${statusClass(o.status)}">${escapeHtml(o.status)}</span>`;
@@ -573,6 +728,7 @@ function renderOrder(o){
   html += `</div>`;
   if (o.buyerName) html += `<div class="buyer-name">${escapeHtml(o.buyerName)}</div>`;
   if (o.time) html += `<div class="order-time">訂購時間：${escapeHtml(o.time)}</div>`;
+  html += renderProgressStepper(o);
 
   // 取件方式資訊
   if (o.sourceType === "pickup" && o.pickupDate){
@@ -594,7 +750,7 @@ function renderOrder(o){
   if (o.items.length){
     html += `<div class="section"><div class="section-label">訂購品項</div><ul class="items-list">`;
     o.items.forEach(it => {
-      html += `<li><span>${escapeHtml(it.name)}</span><span class="qty">x${it.qty}</span></li>`;
+      html += `<li><span class="name">${escapeHtml(it.name)}</span><span class="fill"></span><span class="qty">x${it.qty}</span></li>`;
     });
     html += `</ul></div>`;
   }
@@ -658,7 +814,7 @@ async function runSearch(){
     .filter(o => normalizePhone(o.buyerPhone) === phoneNorm)
     .sort((a, b) => (b.time || "").localeCompare(a.time || ""));
 
-  attachTracking(matched, trackingList);
+  attachStatus(matched, trackingList);
 
   btn.disabled = false;
   btn.textContent = "查詢訂單";
